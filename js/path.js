@@ -1,8 +1,6 @@
 var canvas = document.getElementById("canvas");
+    canvas.style.cursor = "none";
 var ctx = canvas.getContext("2d");
-
-// set starting values
-var fps = 60;
 
 let entityControl = function(canvas,ctx) {
     let self = {
@@ -17,7 +15,7 @@ let entityControl = function(canvas,ctx) {
                 type:'enemy',
                 subType,
                 travel: args.travel,
-                speed: args.speed,
+                speed: args.speed/100,
                 activeSegment:0,
                 color: args.color,
                 position:{x:-1,y:-1},
@@ -445,13 +443,25 @@ let gameControl = function(canvas,ctx) {
         pathControl: pathControl(canvas,ctx),
         entity: entityControl(canvas,ctx),
         mouse: {x:0,y:0},
+        loop:null,
+        gameTick:0,
+        gameTickSpeed:500,
+        fps:120,
         init: function() {
             let self = this;
             self.buildLevel(3);
             self.animation();
             self.loop = setInterval(function() {
-                self.animation();
-            }, 100);
+                self.resetGameTick();
+                if(self.gameTick%Math.ceil(1000/self.fps) == 0){
+                    self.animation();
+                }
+                if(self.gameTick%Math.ceil(1000/self.gameTickSpeed) == 0){
+                self.updateEntities();
+                }
+                ++self.gameTick;
+                console.log(self.gameTick);
+            }, 1);
 
             self.canvas.addEventListener("mousemove", function (evt) {
                 self.mouse = self.getMousePos(evt);
@@ -534,21 +544,21 @@ let gameControl = function(canvas,ctx) {
             self.pathControl.addStraight({x:0,y:150});
         },
         generateEntities: function(){
-            self.entity.addEnity('tower','basic',{position:{x:200,y:200},color:{r:0,g:255,b:255},radius:10,attackRadius:30,attack:{rate:20,power:.3}});
-            self.entity.addEnity('tower','basic',{position:{x:130,y:120},color:{r:0,g:255,b:255},radius:10,attackRadius:30,attack:{rate:20,power:.3}});
-            self.entity.addEnity('enemy','basic',{speed:.01,travel:0,color:{r:255,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.015,travel:-.2,color:{r:155,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.01,travel:-.3,color:{r:255,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.01,travel:-.4,color:{r:255,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.01,travel:-.6,color:{r:255,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.01,travel:-.7,color:{r:255,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.01,travel:-.8,color:{r:255,g:0,b:0},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.0105,travel:-1,color:{r:0,g:0,b:255},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.0105,travel:-1.5,color:{r:0,g:0,b:255},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.0105,travel:-2,color:{r:0,g:0,b:255},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.0105,travel:-2.5,color:{r:0,g:0,b:255},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.0105,travel:-3,color:{r:0,g:0,b:255},health:1});
-            self.entity.addEnity('enemy','basic',{speed:.0105,travel:-3.5,color:{r:0,g:0,b:255},health:1});
+            self.entity.addEnity('tower','basic',{position:{x:200,y:200},color:{r:0,g:255,b:255},radius:10,attackRadius:30,attack:{rate:200,power:.3}});
+            self.entity.addEnity('tower','basic',{position:{x:130,y:120},color:{r:0,g:255,b:255},radius:10,attackRadius:30,attack:{rate:200,power:.3}});
+            self.entity.addEnity('enemy','basic',{speed:.1,travel:0,color:{r:255,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.15,travel:-.2,color:{r:155,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.1,travel:-.3,color:{r:255,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.1,travel:-.4,color:{r:255,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.1,travel:-.6,color:{r:255,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.1,travel:-.7,color:{r:255,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.1,travel:-.8,color:{r:255,g:0,b:0},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.105,travel:-1,color:{r:0,g:0,b:255},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.105,travel:-1.5,color:{r:0,g:0,b:255},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.105,travel:-2,color:{r:0,g:0,b:255},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.105,travel:-2.5,color:{r:0,g:0,b:255},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.105,travel:-3,color:{r:0,g:0,b:255},health:1});
+            self.entity.addEnity('enemy','basic',{speed:.105,travel:-3.5,color:{r:0,g:0,b:255},health:1});
         },
         resetCanvas: function(){
             self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
@@ -626,28 +636,45 @@ let gameControl = function(canvas,ctx) {
             let self = this;
                 self.resetCanvas();
                 self.pathControl.renderLines();
-                self.updateEntities();
                 self.entity.draw();
 
-            let find = {x:200,y:200};
-            if(true) {
-                self.ctx.strokeStyle = "rgba(4,255,255,0.2)";
-                ctx.beginPath();
-                ctx.moveTo(0, find.y);
-                ctx.lineTo(find.x*self.canvas.width, find.y);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(find.x, 0);
-                ctx.lineTo(find.x, find.y+self.canvas.height);
-                ctx.stroke();
-            }
+            self.ctx.strokeStyle = "rgba(4,255,255,0.2)";
+            ctx.beginPath();
+            ctx.moveTo(0, self.mouse.y);
+            ctx.lineTo(self.mouse.x*self.canvas.width, self.mouse.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(self.mouse.x, 0);
+            ctx.lineTo(self.mouse.x, self.mouse.y+self.canvas.height);
+            ctx.stroke();
         },
-        getMousePos(evt) {
+        getMousePos: function(evt) {
             var rect = self.canvas.getBoundingClientRect();
             return {
                 x: evt.clientX - rect.left,
                 y: evt.clientY - rect.top
             };
+        },
+        resetGameTick: function(){
+            let self = this;
+            if(self.gameTick == self.lcm(self.fps,self.gameTickSpeed || self.gameTick > 10000)){
+                self.gameTick = 0;
+            }
+        },
+        lcm: function(x, y) {
+            let self = this;
+            if ((typeof x !== 'number') || (typeof y !== 'number')) {return false;}
+            return (!x || !y) ? 0 : Math.abs((x * y) / self.gcd(x, y));
+        },
+        gcd: function(x, y) {
+            x = Math.abs(x);
+            y = Math.abs(y);
+            while(y) {
+                var t = y;
+                y = x % y;
+                x = t;
+            }
+            return x;
         }
 
     };
